@@ -1,0 +1,6 @@
+.env 
+*.pem 
+.terraform/ 
+*.tfstate* 
+tfplan 
+node_modules/
