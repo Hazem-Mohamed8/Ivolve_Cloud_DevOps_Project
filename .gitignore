@@ -4,3 +4,6 @@
 *.tfstate* 
 tfplan 
 node_modules/
+aws/
+awscliv2.zip
+awscliv2.zip
