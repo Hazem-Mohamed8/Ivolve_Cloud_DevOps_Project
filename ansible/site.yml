@@ -1,0 +1,7 @@
+- name: Configure CI runner server
+  hosts: role_runner
+  become: true
+  roles:
+    - docker
+    - trivy
+    - github_runner

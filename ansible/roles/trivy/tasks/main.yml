@@ -1,0 +1,8 @@
+- name: Install Trivy (pinned release)
+  ansible.builtin.unarchive:
+    src: "https://github.com/aquasecurity/trivy/releases/download/v{{ trivy_version }}/trivy_{{ trivy_version }}_Linux-64bit.tar.gz"
+    dest: /usr/local/bin
+    include: [trivy]
+    remote_src: true
+    mode: "0755"
+    creates: /usr/local/bin/trivy

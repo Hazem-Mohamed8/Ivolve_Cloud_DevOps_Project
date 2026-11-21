@@ -1,9 +1,10 @@
-.env 
 *.pem 
-.terraform/ 
+*.swp
 *.tfstate* 
-tfplan 
-node_modules/
+.env 
+.terraform/ 
 aws/
 awscliv2.zip
-awscliv2.zip
+node_modules/
+tfplan 
+tfplan*

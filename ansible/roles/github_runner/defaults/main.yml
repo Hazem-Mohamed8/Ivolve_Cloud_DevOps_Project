@@ -1,0 +1,5 @@
+runner_user: runner
+runner_dir: /home/runner/actions-runner
+runner_name: "{{ inventory_hostname }}"
+runner_labels: ivolve
+# github_repo_url and github_runner_token are passed with -e (never commit the token)

@@ -68,7 +68,7 @@ resource "aws_instance" "jenkins" {
   }
 
   tags = {
-    Name = "${var.name}-jenkins"
-    Role = "jenkins"
+    Name = "${var.name}-runner"
+    Role = "runner"
   }
 }

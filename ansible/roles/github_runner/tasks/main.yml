@@ -1,0 +1,73 @@
+- name: Install acl (needed to become an unprivileged user)
+  ansible.builtin.apt:
+    name: acl
+    state: present
+    update_cache: true
+
+- name: Create runner user
+  ansible.builtin.user:
+    name: "{{ runner_user }}"
+    shell: /bin/bash
+    groups: docker
+    append: true
+    create_home: true
+
+- name: Get latest runner release
+  ansible.builtin.uri:
+    url: https://api.github.com/repos/actions/runner/releases/latest
+    return_content: true
+  register: runner_release
+
+- name: Set runner version
+  ansible.builtin.set_fact:
+    runner_version: "{{ runner_release.json.tag_name | regex_replace('^v', '') }}"
+
+- name: Create runner directory
+  ansible.builtin.file:
+    path: "{{ runner_dir }}"
+    state: directory
+    owner: "{{ runner_user }}"
+    group: "{{ runner_user }}"
+    mode: "0755"
+
+- name: Download and extract runner
+  ansible.builtin.unarchive:
+    src: "https://github.com/actions/runner/releases/download/v{{ runner_version }}/actions-runner-linux-x64-{{ runner_version }}.tar.gz"
+    dest: "{{ runner_dir }}"
+    remote_src: true
+    owner: "{{ runner_user }}"
+    group: "{{ runner_user }}"
+    creates: "{{ runner_dir }}/config.sh"
+  register: runner_download
+
+- name: Install runner OS dependencies
+  ansible.builtin.command:
+    cmd: ./bin/installdependencies.sh
+    chdir: "{{ runner_dir }}"
+  when: runner_download is changed
+
+- name: Register runner with GitHub
+  ansible.builtin.command:
+    cmd: >-
+      ./config.sh --unattended --replace
+      --url {{ github_repo_url }}
+      --token {{ github_runner_token }}
+      --name {{ runner_name }}
+      --labels {{ runner_labels }}
+    chdir: "{{ runner_dir }}"
+    creates: "{{ runner_dir }}/.runner"
+  become: true
+  become_user: "{{ runner_user }}"
+  no_log: true
+
+- name: Install runner as a systemd service
+  ansible.builtin.command:
+    cmd: "./svc.sh install {{ runner_user }}"
+    chdir: "{{ runner_dir }}"
+    creates: "/etc/systemd/system/actions.runner.*.service"
+
+- name: Start runner service
+  ansible.builtin.shell: ./svc.sh status | grep -q "active (running)" || ./svc.sh start
+  args:
+    chdir: "{{ runner_dir }}"
+  changed_when: false
