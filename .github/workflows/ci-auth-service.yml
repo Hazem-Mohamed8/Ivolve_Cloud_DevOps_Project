@@ -1,0 +1,21 @@
+name: CI - auth-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "auth-service/**"
+      - ".github/workflows/ci-auth-service.yml"
+      - ".github/workflows/ci-template.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      service: auth-service
+      tag_key: auth
+    secrets: inherit

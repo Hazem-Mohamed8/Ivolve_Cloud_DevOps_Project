@@ -1,0 +1,21 @@
+name: CI - roadmap-service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "roadmap-service/**"
+      - ".github/workflows/ci-roadmap-service.yml"
+      - ".github/workflows/ci-template.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  ci:
+    uses: ./.github/workflows/ci-template.yml
+    with:
+      service: roadmap-service
+      tag_key: roadmap
+    secrets: inherit
