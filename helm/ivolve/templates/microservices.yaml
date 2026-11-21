@@ -1,0 +1,57 @@
+{{- range $key, $svc := .Values.services }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $svc.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  replicas: {{ $svc.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $svc.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $svc.name }}
+    spec:
+      containers:
+        - name: {{ $svc.name }}
+          image: "{{ $.Values.registry }}/{{ $svc.image }}:{{ index $.Values.tags $key }}"
+          ports:
+            - containerPort: {{ $svc.port }}
+          {{- if $svc.envFromConfig }}
+          envFrom:
+            - configMapRef:
+                name: ivolve-config
+          {{- end }}
+          {{- with $svc.env }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          readinessProbe:
+            httpGet:
+              path: {{ $svc.probePath }}
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $svc.readyDelay }}
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: {{ $svc.port }}
+            initialDelaySeconds: {{ $svc.liveDelay }}
+          resources:
+            {{- toYaml $svc.resources | nindent 12 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $svc.name }}
+  namespace: {{ $.Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ $svc.name }}
+  ports:
+    - port: {{ $svc.port }}
+      targetPort: {{ $svc.port }}
+{{- end }}

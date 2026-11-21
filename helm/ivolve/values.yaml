@@ -1,0 +1,100 @@
+namespace: ivolve
+createNamespace: true
+registry: 920394550345.dkr.ecr.eu-north-1.amazonaws.com/ivolve
+
+# CI (GitHub Actions) rewrites ONLY these three lines
+tags:
+  frontend: "latest"
+  auth: "latest"
+  roadmap: "latest"
+
+config:
+  DB_HOST: mysql-0.mysql-headless
+  DB_PORT: "3306"
+  DB_NAME: ivolve
+  DB_USER: ivolveuser
+
+# lab values only - never keep real secrets in Git
+secret:
+  MYSQL_ROOT_PASSWORD: ChangeMeRoot123
+  DB_PASSWORD: ChangeMeUser123
+  SESSION_SECRET: ChangeMeSession123
+
+storage:
+  className: ebs-gp3
+  size: 5Gi
+
+mysql:
+  image: mysql:8.0
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 768Mi
+
+ingress:
+  className: traefik
+
+services:
+  auth:
+    name: auth-service
+    image: auth-service
+    port: 5000
+    replicas: 2
+    envFromConfig: true
+    env:
+      - name: DB_PASSWORD
+        valueFrom:
+          secretKeyRef:
+            name: ivolve-secret
+            key: DB_PASSWORD
+    probePath: /health
+    readyDelay: 10
+    liveDelay: 20
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+  roadmap:
+    name: roadmap-service
+    image: roadmap-service
+    port: 8080
+    replicas: 1
+    envFromConfig: false
+    probePath: /api/roadmap
+    readyDelay: 30
+    liveDelay: 45
+    resources:
+      requests:
+        cpu: 200m
+        memory: 256Mi
+      limits:
+        cpu: 500m
+        memory: 768Mi
+  frontend:
+    name: frontend
+    image: frontend
+    port: 3000
+    replicas: 1
+    envFromConfig: true
+    env:
+      - name: SESSION_SECRET
+        valueFrom:
+          secretKeyRef:
+            name: ivolve-secret
+            key: SESSION_SECRET
+    probePath: /
+    readyDelay: 5
+    liveDelay: 15
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
