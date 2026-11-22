@@ -5,7 +5,7 @@ registry: 920394550345.dkr.ecr.eu-north-1.amazonaws.com/ivolve
 # CI (GitHub Actions) rewrites ONLY these three lines
 tags:
   frontend: '3c08411'
-  auth: 'beee956'
+  auth: 'e77b86e'
   roadmap: 'e34ba41'
 
 config:
