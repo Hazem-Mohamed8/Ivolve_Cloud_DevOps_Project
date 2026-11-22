@@ -30,3 +30,35 @@ module "eks" {
   public_subnet_ids  = module.network.public_subnet_ids
   node_instance_type = var.node_instance_type
 }
+
+# CI runner -> EKS API (the runner resolves the endpoint to the private ENIs inside the VPC)
+resource "aws_vpc_security_group_ingress_rule" "runner_to_eks_api" {
+  security_group_id            = module.eks.cluster_security_group_id
+  referenced_security_group_id = module.server.security_group_id
+  from_port                    = 443
+  to_port                      = 443
+  ip_protocol                  = "tcp"
+  description                  = "GitHub Actions runner to EKS API"
+}
+
+# kubectl/helm access for the pipeline user
+data "aws_iam_user" "ci" {
+  user_name = "github-actions-ecr"
+}
+
+resource "aws_eks_access_entry" "ci" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = data.aws_iam_user.ci.arn
+}
+
+resource "aws_eks_access_policy_association" "ci" {
+  cluster_name  = module.eks.cluster_name
+  principal_arn = data.aws_iam_user.ci.arn
+  policy_arn    = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSClusterAdminPolicy"
+
+  access_scope {
+    type = "cluster"
+  }
+
+  depends_on = [aws_eks_access_entry.ci]
+}
