@@ -61,19 +61,34 @@ jobs:
         env:
           KEY: ${{ inputs.tag_key }}
         run: |
+          git rebase --abort 2>/dev/null || true
+          git fetch origin main
+          git checkout -B main origin/main
           TAG="${GITHUB_SHA::7}"
           sed -i -E "s|^  ${KEY}: .*|  ${KEY}: '${TAG}'|" helm/ivolve/values.yaml
           git diff -- helm/ivolve/values.yaml
 
       - name: Push Manifests
+        env:
+          KEY: ${{ inputs.tag_key }}
+          SERVICE: ${{ inputs.service }}
         run: |
+          TAG="${GITHUB_SHA::7}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add helm/ivolve/values.yaml
           git diff --cached --quiet && echo "nothing to commit" && exit 0
-          git commit -m "ci(${{ inputs.service }}): image ${GITHUB_SHA::7} [skip ci]"
-          git pull --rebase origin main
-          git push origin HEAD:main
+          git commit -m "ci(${SERVICE}): image ${TAG} [skip ci]"
+          for i in 1 2 3 4 5; do
+            if git push origin HEAD:main; then exit 0; fi
+            echo "push rejected, re-applying on the latest main (attempt $i)"
+            git fetch origin main
+            git reset --hard origin/main
+            sed -i -E "s|^  ${KEY}: .*|  ${KEY}: '${TAG}'|" helm/ivolve/values.yaml
+            git add helm/ivolve/values.yaml
+            git commit -m "ci(${SERVICE}): image ${TAG} [skip ci]"
+          done
+          exit 1
 
       - name: Post - success
         if: success()
