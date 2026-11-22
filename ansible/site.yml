@@ -5,3 +5,5 @@
     - docker
     - trivy
     - github_runner
+    - role: cluster_tools
+      tags: [tools]

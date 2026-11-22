@@ -90,6 +90,12 @@ jobs:
           done
           exit 1
 
+      - name: Deploy to EKS (Helm)
+        run: |
+          aws eks update-kubeconfig --region "${AWS_REGION}" --name ivolve-eks
+          helm upgrade --install ivolve helm/ivolve --namespace ivolve --create-namespace --set createNamespace=false --atomic --timeout 10m
+          kubectl get pods -n ivolve
+
       - name: Post - success
         if: success()
         run: echo "Pipeline for ${{ inputs.service }} finished successfully"

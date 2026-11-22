@@ -1,0 +1,40 @@
+- name: Install unzip and curl
+  ansible.builtin.apt:
+    name: [unzip, curl]
+    state: present
+    update_cache: true
+
+- name: Download AWS CLI v2
+  ansible.builtin.unarchive:
+    src: https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+    dest: /tmp
+    remote_src: true
+    creates: /usr/local/bin/aws
+
+- name: Install AWS CLI v2
+  ansible.builtin.command: /tmp/aws/install --update
+  args:
+    creates: /usr/local/bin/aws
+
+- name: Get latest stable kubectl version
+  ansible.builtin.uri:
+    url: https://dl.k8s.io/release/stable.txt
+    return_content: true
+  register: kubectl_version
+
+- name: Install kubectl
+  ansible.builtin.get_url:
+    url: "https://dl.k8s.io/release/{{ kubectl_version.content | trim }}/bin/linux/amd64/kubectl"
+    dest: /usr/local/bin/kubectl
+    mode: "0755"
+
+- name: Download Helm install script
+  ansible.builtin.get_url:
+    url: https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+    dest: /tmp/get_helm.sh
+    mode: "0755"
+
+- name: Install Helm
+  ansible.builtin.command: /tmp/get_helm.sh
+  args:
+    creates: /usr/local/bin/helm
