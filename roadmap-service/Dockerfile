@@ -7,6 +7,8 @@ RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
 
+RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
+
 WORKDIR /app
 COPY --from=build /build/target/roadmap-service-1.0.0.jar app.jar
 
