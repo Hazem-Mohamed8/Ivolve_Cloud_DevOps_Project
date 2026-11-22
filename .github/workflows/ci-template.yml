@@ -45,7 +45,7 @@ jobs:
         run: echo "IMAGE=${{ steps.ecr.outputs.registry }}/${{ env.ECR_NAMESPACE }}/${{ inputs.service }}:${GITHUB_SHA::7}" >> "$GITHUB_ENV"
 
       - name: Build Image
-        run: docker build -t "$IMAGE" ./${{ inputs.service }}
+        run: docker build --pull -t "$IMAGE" ./${{ inputs.service }}
 
       - name: Scan Image (Trivy)
         run: trivy image --severity HIGH,CRITICAL --ignore-unfixed --exit-code 1 "$IMAGE"
