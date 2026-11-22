@@ -6,7 +6,7 @@ registry: 920394550345.dkr.ecr.eu-north-1.amazonaws.com/ivolve
 tags:
   frontend: '3c08411'
   auth: 'e77b86e'
-  roadmap: 'e34ba41'
+  roadmap: 'e77b86e'
 
 config:
   DB_HOST: mysql-0.mysql-headless
